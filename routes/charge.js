@@ -1,0 +1,155 @@
+import express from 'express';
+import Charge from '../models/charge.js';
+import authMiddleware from '../middleware/authMiddleware.js';
+import multer from 'multer';
+import path from 'path';
+
+
+// إعداد التخزين
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploadsCharge/'); // مجلد نحطو فيه الصور
+  },
+  filename: function (req, file, cb) {
+    const uniqueName = Date.now() + '-' + file.originalname;
+    cb(null, uniqueName);
+  }
+});
+
+const upload = multer({ storage });
+
+const router = express.Router();
+
+// operations for charges (top-up)
+
+router.post('/newcharge/:id', async (req, res) => {
+    try {
+
+        const {
+            playerId,
+            amount,
+            quantity,
+            email,
+            phone,
+            paymentMethod
+        } = req.body;
+
+        const gameId = req.params.id; // ✅ الصحيح
+
+        const charge = new Charge({
+            playerId,
+            amount,
+            quantity,
+            gameId,
+            email,
+            phone,
+            paymentMethod,
+            status: 'waiting_verification'
+        });
+
+        await charge.save();
+
+        res.status(201).json(charge);
+
+    } catch (error) {
+        console.error('Error creating charge:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+
+// Get all charges
+router.get('/allcharges',authMiddleware, async (req, res) => {
+    try {
+        const charges = await Charge
+            .find()
+            .populate('gameId','name');
+        res.json(charges);
+    } catch (error) {
+        console.error('Error fetching charges:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// payment verification endpoint
+router.put('/approve/:id',authMiddleware, async (req, res) => {
+  try {
+    const charge = await Charge.findById(req.params.id);
+    if (!charge) return res.status(404).json({ message: 'Charge not found' });
+
+    charge.status = "paid";
+    await charge.save();
+
+    res.json(charge);
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.post('/confirm/:id', upload.single('proofImage'), async (req, res) => {
+  try {
+    const charge = await Charge.findById(req.params.id);
+    if (!charge) return res.status(404).json({ message: 'Charge not found' });
+
+    if (req.file) {
+      charge.proofImageUrl = `http://localhost:3000/uploadsCharge/${req.file.filename}`;
+    }
+
+    charge.status = 'waiting_verification';
+
+    await charge.save();
+
+    res.json({ message: 'Proof uploaded successfully' });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// cofirm charge
+router.put('/confirm/:id',authMiddleware, async (req, res) => {
+  try {
+    const charge = await Charge.findById(req.params.id);
+    if (!charge) return res.status(404).json({ message: 'Order not found' });
+
+    charge.status = "waiting_verification";
+
+    await charge.save();
+
+    res.json(charge);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get('/paymentcharge/:id', async (req, res) => {
+  try {
+    const charge = await Charge.findById(req.params.id)
+      .populate('gameId', 'name image');
+
+    if (!charge) {
+      return res.status(404).json({ message: 'Charge not found' });
+    }
+
+    res.json({
+      chargeId: charge._id,
+      name: charge.gameId?.name,
+      image: charge.gameId?.image,
+      price: charge.amount,       // amount paid
+      quantity: charge.quantity,  // top-up quantity if available
+      playerId: charge.playerId,
+      paymentMethod: charge.paymentMethod,
+      status: charge.status
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
+export default router;
+
+
+
