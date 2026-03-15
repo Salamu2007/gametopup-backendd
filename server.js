@@ -28,7 +28,7 @@ app.use(limiter);
 
 // CORS with options
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:4200',
+  origin: process.env.FRONTEND_URL || 'https://gamestopupdz.vercel.app',
   credentials: true
 }));
 
@@ -75,16 +75,4 @@ connectDB();
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
-  console.log(`   GET    /api/products/:id`);
-  console.log(`\n🛒 Orders (MongoDB):`);
-  console.log(`   POST   /api/orders - Create order`);
-  console.log(`   GET    /api/orders - Get all orders`);
-  console.log(`   GET    /api/orders/:id - Get order by ID`);
-  console.log(`   PUT    /api/orders/:id - Update order status`);
-  console.log(`   DELETE /api/orders/:id - Delete/Cancel order`);
-  console.log(`\n💰 Charges (TopUp):`);
-  console.log(`   POST   /api/charges`);
-  console.log(`   GET    /api/charges`);
-  console.log(`   GET    /api/charges/:id`);
-  console.log(`   PUT    /api/charges/:id`);
 });
