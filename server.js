@@ -60,11 +60,24 @@ app.use((req, res) => {
 // Removed duplicate mongoose.connect(...) block. connectDB() below handles the connection.
 
 const connectDB = async () => {
+  const mongoUri = process.env.MONGODB_URI;
+  if (!mongoUri) {
+    console.error('MongoDB URI is not set (process.env.MONGODB_URI). Please configure it in your Render/hosting environment.');
+    process.exit(1);
+  }
+
   try {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/gametopup';
-    await mongoose.connect(mongoUri);
+    // Better timeout handling for cloud deployments
+    await mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      connectTimeoutMS: 10000
+    });
+
+    console.log('Connected to MongoDB');
   } catch (error) {
     console.error('MongoDB connection failed:', error.message);
+    console.error('Ensure your MongoDB URI is correct and the database is reachable.');
     process.exit(1);
   }
 };
