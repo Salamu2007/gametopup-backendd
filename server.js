@@ -28,7 +28,8 @@ app.use(limiter);
 
 // CORS with options
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://gamestopupdz.vercel.app',
+  origin: "https://gamestopupdz.vercel.app",
+  methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
 
