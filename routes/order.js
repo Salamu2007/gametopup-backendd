@@ -78,8 +78,9 @@ router.post('/confirm/:id', upload.single('proofImage'), async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
+    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
     order.proofImageUrl = req.file 
-      ? `http://localhost:3000/uploads/${req.file.filename}`
+      ? `${baseUrl}/uploads/${req.file.filename}`
       : null;
 
     order.status = 'waiting_verification';

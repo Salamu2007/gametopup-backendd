@@ -27,11 +27,23 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // CORS with options
-app.use(cors({
-  origin: "https://gamestopupdz.vercel.app",
+const corsOrigins = (process.env.CORS_ORIGIN || 'http://localhost:4200').split(',').map(o => o.trim()).filter(Boolean);
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // allow requests with no origin (like mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    if (corsOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    const msg = `CORS policy: Origin ${origin} is not allowed.`;
+    return callback(new Error(msg), false);
+  },
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
-}));
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json({ limit: '10mb' })); // limit payload size
 
@@ -87,6 +99,7 @@ connectDB();
 
 
 const PORT = process.env.PORT || 3000;
+const baseServerUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on ${baseServerUrl}`);
 });

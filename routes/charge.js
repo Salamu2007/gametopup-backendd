@@ -93,7 +93,8 @@ router.post('/confirm/:id', upload.single('proofImage'), async (req, res) => {
     if (!charge) return res.status(404).json({ message: 'Charge not found' });
 
     if (req.file) {
-      charge.proofImageUrl = `http://localhost:3000/uploadsCharge/${req.file.filename}`;
+      const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+      charge.proofImageUrl = `${baseUrl}/uploadsCharge/${req.file.filename}`;
     }
 
     charge.status = 'waiting_verification';

@@ -14,6 +14,9 @@ dotenv.config();
 
 const router = express.Router();
 
+// Helper to build full URL (useful for images stored locally)
+const getBaseUrl = (req) => process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+
 // Create a new admin
 router.post('/register', [
   body('username').isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
@@ -100,7 +103,7 @@ router.get('/orders', authMiddleware, async (req, res) => {
       gameName: o.productId?.name,
       gameImage: o.productId?.image
         ? (o.productId.image.startsWith('/uploads/')
-            ? `http://localhost:3000${o.productId.image}`
+            ? `${getBaseUrl(req)}${o.productId.image}`
             : o.productId.image)
         : '/assets/images/default.png',
       currency: o.productId?.currency || 'دج',
@@ -131,7 +134,7 @@ router.get('/charges', authMiddleware, async (req, res) => {
         gameName: c.gameId?.name,
         gameImage: c.gameId?.image
           ? (c.gameId.image.startsWith('/uploads/')
-              ? `http://localhost:3000${c.gameId.image}`
+              ? `${getBaseUrl(req)}${c.gameId.image}`
               : c.gameId.image)
           : '/assets/images/default.png',
         currency: c.gameId?.currency || 'دج',

@@ -11,6 +11,9 @@ const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
+// Helper to build a full URL for uploads / images
+const getBaseUrl = (req) => process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+
 // تكوين multer لتحميل الصور
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -77,7 +80,7 @@ router.get('/charges', async (req, res) => {
                 ...game,
                 imageUrl: game.image ? 
                     (game.image.startsWith('/uploads/') ? 
-                        `http://localhost:3000${game.image}` : 
+                        `${getBaseUrl(req)}${game.image}` : 
                         game.image) : 
                     '/assets/images/default.png',
                 currencyType: game.currencyType || 'UC'
@@ -103,7 +106,7 @@ router.get('/orders', async (req, res) => {
             ...game,
             imageUrl: game.image ? 
                 (game.image.startsWith('/uploads/') ? 
-                    `http://localhost:3000${game.image}` : 
+                    `${getBaseUrl(req)}${game.image}` : 
                     game.image) : 
                 '/assets/images/default.png'
         }));
@@ -171,7 +174,7 @@ router.get('/:id', async (req, res) => {
             ...game.toObject(),
             image: game.image ? 
                 (game.image.startsWith('/uploads/') ? 
-                    `http://localhost:3000${game.image}` : 
+                    `${getBaseUrl(req)}${game.image}` : 
                     game.image) : 
                 '/assets/images/default.png'
         };
