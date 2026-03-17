@@ -32,17 +32,24 @@ const corsOrigins = (process.env.CORS_ORIGIN || 'http://localhost:4200')
   .map(o => o.trim())
   .filter(Boolean);
 
+const normalizeOrigin = (url) => url.replace(/\/$/, '');
+
 const isOriginAllowed = (origin) => {
   if (!origin) return true; // allow non-browser requests (curl, Postman, etc.)
 
-  // Exact match
-  if (corsOrigins.includes(origin)) return true;
+  const normalizedOrigin = normalizeOrigin(origin);
+  const normalizedAllowed = corsOrigins.map(normalizeOrigin);
 
-  // Allow wildcard origins like `https://example.com/*` (useful when you want to allow any path)
-  for (const allowed of corsOrigins) {
+  // Exact match
+  if (normalizedAllowed.includes(normalizedOrigin)) return true;
+
+  // Allow wildcard origins like `https://example.com/*`
+  for (const allowed of normalizedAllowed) {
     if (allowed.endsWith('*')) {
-      const prefix = allowed.slice(0, -1);
-      if (origin.startsWith(prefix)) return true;
+      const cleanedAllowed = allowed.slice(0, -1); // remove the '*'
+      // Accept both with/without trailing slash
+      if (normalizedOrigin === cleanedAllowed.replace(/\/$/, '')) return true;
+      if (normalizedOrigin.startsWith(cleanedAllowed)) return true;
     }
   }
 
