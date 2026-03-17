@@ -27,15 +27,34 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // CORS with options
-const corsOrigins = (process.env.CORS_ORIGIN || 'http://localhost:4200').split(',').map(o => o.trim()).filter(Boolean);
+const corsOrigins = (process.env.CORS_ORIGIN || 'http://localhost:4200')
+  .split(',')
+  .map(o => o.trim())
+  .filter(Boolean);
+
+const isOriginAllowed = (origin) => {
+  if (!origin) return true; // allow non-browser requests (curl, Postman, etc.)
+
+  // Exact match
+  if (corsOrigins.includes(origin)) return true;
+
+  // Allow wildcard origins like `https://example.com/*` (useful when you want to allow any path)
+  for (const allowed of corsOrigins) {
+    if (allowed.endsWith('*')) {
+      const prefix = allowed.slice(0, -1);
+      if (origin.startsWith(prefix)) return true;
+    }
+  }
+
+  return false;
+};
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // allow requests with no origin (like mobile apps, curl, Postman)
-    if (!origin) return callback(null, true);
-    if (corsOrigins.includes(origin)) {
+    if (isOriginAllowed(origin)) {
       return callback(null, true);
     }
+
     const msg = `CORS policy: Origin ${origin} is not allowed.`;
     return callback(new Error(msg), false);
   },
