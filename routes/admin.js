@@ -168,8 +168,11 @@ router.put('/confirm/:id', authMiddleware, async (req, res) => {
     // email notification
     if (order.email) {
       try {
-        const gmailUser = process.env.GMAIL_USER;
-        const gmailPass = process.env.GMAIL_PASS?.replace(/\s/g, '');
+        const gmailUser = process.env.GMAIL_USER?.trim();
+        const gmailPass = process.env.GMAIL_PASS?.trim();
+        if (!gmailUser || !gmailPass) {
+          console.warn('⚠️ Gmail credentials are not set. Please set GMAIL_USER and GMAIL_PASS in your environment.');
+        }
         if (gmailUser && gmailPass) {
           const nodemailer = await import('nodemailer');
           const transporter = nodemailer.createTransport({ service:'gmail', auth:{user:gmailUser,pass:gmailPass}});

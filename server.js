@@ -69,6 +69,8 @@ const corsOptions = {
     return callback(new Error(msg), false);
   },
   methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  exposedHeaders: ["Authorization"],
   credentials: true
 };
 
