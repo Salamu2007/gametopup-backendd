@@ -166,14 +166,18 @@ router.put('/confirm/:id', authMiddleware, async (req, res) => {
     await order.save();
 
     // email notification
-    if (order.email) {
+    if (!order.email) {
+      console.warn('🔔 No email address set on order, skipping email notification.');
+    } else {
       try {
         const gmailUser = process.env.GMAIL_USER?.trim();
         const gmailPass = process.env.GMAIL_PASS?.trim();
         if (!gmailUser || !gmailPass) {
           console.warn('⚠️ Gmail credentials are not set. Please set GMAIL_USER and GMAIL_PASS in your environment.');
         }
+
         if (gmailUser && gmailPass) {
+          console.log('📩 Sending order confirmation email to', order.email);
           const nodemailer = await import('nodemailer');
           const transporter = nodemailer.createTransport({ service:'gmail', auth:{user:gmailUser,pass:gmailPass}});
           await transporter.sendMail({
@@ -198,8 +202,11 @@ router.put('/confirm/:id', authMiddleware, async (req, res) => {
             </div>
           `
           });
+          console.log('✅ Order confirmation email sent successfully to', order.email);
         }
-      } catch(e){ console.error('email notify order confirm fail', e.message); }
+      } catch (e) {
+        console.error('email notify order confirm fail', e);
+      }
     }
 
     res.json(order);
@@ -216,11 +223,17 @@ router.put('/reject/:id', authMiddleware, async (req, res) => {
     order.status = "rejected";
     await order.save();
 
-    if (order.email) {
+    if (!order.email) {
+      console.warn('🔔 No email address set on order, skipping rejection email.');
+    } else {
       try {
-        const gmailUser = process.env.GMAIL_USER;
-        const gmailPass = process.env.GMAIL_PASS?.replace(/\s/g, '');
+        const gmailUser = process.env.GMAIL_USER?.trim();
+        const gmailPass = process.env.GMAIL_PASS?.trim();
+        if (!gmailUser || !gmailPass) {
+          console.warn('⚠️ Gmail credentials are not set. Please set GMAIL_USER and GMAIL_PASS in your environment.');
+        }
         if (gmailUser && gmailPass) {
+          console.log('📩 Sending order rejection email to', order.email);
           const nodemailer = await import('nodemailer');
           const transporter = nodemailer.createTransport({ service:'gmail', auth:{user:gmailUser,pass:gmailPass}});
           await transporter.sendMail({
@@ -237,8 +250,9 @@ router.put('/reject/:id', authMiddleware, async (req, res) => {
             </div>
           `
           });
+          console.log('✅ Order rejection email sent successfully to', order.email);
         }
-      } catch(e){ console.error('email notify order reject fail', e.message); }
+      } catch(e){ console.error('email notify order reject fail', e); }
     }
 
     res.json(order);
@@ -256,16 +270,19 @@ router.put('/confirm-charge/:id', authMiddleware, async (req, res) => {
     await charge.save();
 
     // إرسال إشعار بريدي للمستخدم
-    if (charge.email) {
+    if (!charge.email) {
+      console.warn('🔔 No email address set on charge, skipping email notification.');
+    } else {
       try {
-        const gmailUser = process.env.GMAIL_USER;
-        const gmailPass = process.env.GMAIL_PASS?.replace(/\s/g, ''); // إزالة جميع المسافات
+        const gmailUser = process.env.GMAIL_USER?.trim();
+        const gmailPass = process.env.GMAIL_PASS?.trim(); // إزالة جميع المسافات
 
         if (!gmailUser || !gmailPass) {
           console.warn('⚠️ بيانات Gmail غير مكتملة');
         } else {
+          console.log('📩 Sending charge confirmation email to', charge.email);
           const nodemailer = await import('nodemailer');
-          
+
           const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -302,9 +319,10 @@ router.put('/confirm-charge/:id', authMiddleware, async (req, res) => {
           };
 
           await transporter.sendMail(mailOptions);
+          console.log('✅ Charge confirmation email sent successfully to', charge.email);
         }
       } catch (mailErr) {
-        console.error('❌ فشل إرسال البريد:', mailErr.message);
+        console.error('❌ فشل إرسال البريد:', mailErr);
       }
     }
 
