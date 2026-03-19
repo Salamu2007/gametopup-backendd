@@ -165,14 +165,23 @@ router.put('/confirm/:id', authMiddleware, async (req, res) => {
 
     await order.save();
 
+    const emailNotification = {
+      attempted: false,
+      success: false,
+      reason: ''
+    };
+
     // email notification
     if (!order.email) {
+      emailNotification.reason = 'No email address set on order.';
       console.warn('🔔 No email address set on order, skipping email notification.');
     } else {
+      emailNotification.attempted = true;
       try {
         const gmailUser = process.env.GMAIL_USER?.trim();
         const gmailPass = process.env.GMAIL_PASS?.trim();
         if (!gmailUser || !gmailPass) {
+          emailNotification.reason = 'Missing GMAIL_USER or GMAIL_PASS in environment.';
           console.warn('⚠️ Gmail credentials are not set. Please set GMAIL_USER and GMAIL_PASS in your environment.');
         }
 
@@ -202,14 +211,17 @@ router.put('/confirm/:id', authMiddleware, async (req, res) => {
             </div>
           `
           });
+          emailNotification.success = true;
+          emailNotification.reason = 'Email sent successfully';
           console.log('✅ Order confirmation email sent successfully to', order.email);
         }
       } catch (e) {
+        emailNotification.reason = e.message || 'Unknown error sending email';
         console.error('email notify order confirm fail', e);
       }
     }
 
-    res.json(order);
+    res.json({ ...order.toObject(), emailNotification });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -277,54 +289,73 @@ router.put('/confirm-charge/:id', authMiddleware, async (req, res) => {
         const gmailUser = process.env.GMAIL_USER?.trim();
         const gmailPass = process.env.GMAIL_PASS?.trim(); // إزالة جميع المسافات
 
-        if (!gmailUser || !gmailPass) {
-          console.warn('⚠️ بيانات Gmail غير مكتملة');
+        if (!charge.email) {
+          console.warn('🔔 No email address set on charge, skipping email notification.');
         } else {
-          console.log('📩 Sending charge confirmation email to', charge.email);
-          const nodemailer = await import('nodemailer');
-
-          const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-              user: gmailUser,
-              pass: gmailPass
-            }
-          });
-
-          const mailOptions = {
-            from: gmailUser,
-            to: charge.email,
-            subject: '✅ طلب الشحن مقبول',
-            html: `
-              <div style="direction: rtl; font-family: Arial, sans-serif; color: #333;">
-                <h2>🎉 تم قبول طلب الشحن!</h2>
-                <p>طلبك قُبل بنجاح، وسيتم إعلامك عند اكتمال العملية أو صدور أي تحديث.</p>
-                
-                <div style="background: #f0f0f0; padding: 15px; border-radius: 5px; margin: 15px 0;">
-                  <p><strong>تفاصيل الطلب:</strong></p>
-                  <p>🎮 <strong>اللعبة:</strong> ${charge.gameId?.name || 'Unknown'}</p>
-                  <p>👤 <strong>معرف اللاعب:</strong> ${charge.playerId}</p>
-                  <p>💰 <strong>المبلغ:</strong> ${charge.amount} دج</p>
-                  <p>📦 <strong>الكمية:</strong> ${charge.quantity || 0}</p>
-                  <p>🆔 <strong>رقم الطلب:</strong> ${charge._id}</p>
-                </div>
-                
-                <p style="color: #555;">سيتم إضافة الشحن إلى حسابك في غضون دقائق معدودة.</p>
-                <p style="color: #555;">شكراً لك على استخدام خدمتنا! 🙏</p>
-                
-                <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
-                <p style="font-size: 12px; color: #999;">هذا البريد تم إرساله تلقائياً. يرجى عدم الرد عليه.</p>
-              </div>
-            `
+          const emailNotification = {
+            attempted: false,
+            success: false,
+            reason: ''
           };
+          emailNotification.attempted = true;
 
-          await transporter.sendMail(mailOptions);
-          console.log('✅ Charge confirmation email sent successfully to', charge.email);
+          if (!gmailUser || !gmailPass) {
+            emailNotification.reason = 'Missing Gmail credentials (GMAIL_USER/GMAIL_PASS).';
+            console.warn('⚠️ بيانات Gmail غير مكتملة');
+          } else {
+            try {
+              console.log('📩 Sending charge confirmation email to', charge.email);
+              const nodemailer = await import('nodemailer');
+
+              const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                  user: gmailUser,
+                  pass: gmailPass
+                }
+              });
+
+              const mailOptions = {
+                from: gmailUser,
+                to: charge.email,
+                subject: '✅ طلب الشحن مقبول',
+                html: `
+                  <div style="direction: rtl; font-family: Arial, sans-serif; color: #333;">
+                    <h2>🎉 تم قبول طلب الشحن!</h2>
+                    <p>طلبك قُبل بنجاح، وسيتم إعلامك عند اكتمال العملية أو صدور أي تحديث.</p>
+                    
+                    <div style="background: #f0f0f0; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                      <p><strong>تفاصيل الطلب:</strong></p>
+                      <p>🎮 <strong>اللعبة:</strong> ${charge.gameId?.name || 'Unknown'}</p>
+                      <p>👤 <strong>معرف اللاعب:</strong> ${charge.playerId}</p>
+                      <p>💰 <strong>المبلغ:</strong> ${charge.amount} دج</p>
+                      <p>📦 <strong>الكمية:</strong> ${charge.quantity || 0}</p>
+                      <p>🆔 <strong>رقم الطلب:</strong> ${charge._id}</p>
+                    </div>
+                    
+                    <p style="color: #555;">سيتم إضافة الشحن إلى حسابك في غضون دقائق معدودة.</p>
+                    <p style="color: #555;">شكراً لك على استخدام خدمتنا! 🙏</p>
+                    
+                    <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+                    <p style="font-size: 12px; color: #999;">هذا البريد تم إرساله تلقائياً. يرجى عدم الرد عليه.</p>
+                  </div>
+                `
+              };
+
+              await transporter.sendMail(mailOptions);
+              emailNotification.success = true;
+              emailNotification.reason = 'Email sent successfully';
+              console.log('✅ Charge confirmation email sent successfully to', charge.email);
+            } catch (mailErr) {
+              emailNotification.reason = mailErr.message || 'Unknown error sending email';
+              console.error('❌ فشل إرسال البريد:', mailErr);
+            }
+          }
+
+          // Attach email notification info to the response for debugging
+          charge._emailNotification = emailNotification;
         }
-      } catch (mailErr) {
-        console.error('❌ فشل إرسال البريد:', mailErr);
       }
-    }
 
     res.json(charge);
   } catch (error) {
@@ -369,6 +400,38 @@ router.put('/reject-charge/:id', authMiddleware, async (req, res) => {
     res.json(charge);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// A simple test endpoint to verify email delivery (requires admin auth).
+// Usage: GET /api/admin/test-email?to=you@example.com
+router.get('/test-email', authMiddleware, async (req, res) => {
+  const to = req.query.to || process.env.TEST_EMAIL;
+  if (!to) {
+    return res.status(400).json({ message: 'Missing recipient email. Use ?to=you@example.com or set TEST_EMAIL.' });
+  }
+
+  const gmailUser = process.env.GMAIL_USER?.trim();
+  const gmailPass = process.env.GMAIL_PASS?.trim();
+  if (!gmailUser || !gmailPass) {
+    return res.status(500).json({ message: 'Missing Gmail credentials (GMAIL_USER/GMAIL_PASS).' });
+  }
+
+  try {
+    const nodemailer = await import('nodemailer');
+    const transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: gmailUser, pass: gmailPass } });
+
+    await transporter.sendMail({
+      from: gmailUser,
+      to: to.toString(),
+      subject: 'Test Email - Gametopupdz',
+      text: 'This is a test email from Gametopupdz backend.'
+    });
+
+    return res.json({ message: 'Test email sent', to });
+  } catch (err) {
+    console.error('Test email send failed', err);
+    return res.status(500).json({ message: 'Failed to send test email', error: err.message });
   }
 });
 
