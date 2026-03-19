@@ -355,7 +355,10 @@ router.put('/confirm-charge/:id', authMiddleware, async (req, res) => {
           // Attach email notification info to the response for debugging
           charge._emailNotification = emailNotification;
         }
+      } catch (emailErr) {
+        console.error('email notify failed', emailErr);
       }
+    }
 
     res.json(charge);
   } catch (error) {
