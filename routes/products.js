@@ -5,7 +5,7 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-import cloudinary from 'cloudinary';
+import { v2 as cloudinary } from 'cloudinary';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -51,17 +51,21 @@ router.post('/upload-image', upload.single('image'), async (req, res) => {
   }
 
   try {
-    // رفع الصورة إلى Cloudinary
+    // رفع الصورة إلى Cloudinary باستخدام Buffer
     const result = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.v2.uploader.upload_stream(
+      const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: 'gametopupdz/games',
           public_id: `game-${Date.now()}-${Math.round(Math.random() * 1E9)}`,
-          resource_type: 'image'
+          resource_type: 'auto'
         },
         (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
+          if (error) {
+            console.error('Cloudinary error:', error);
+            reject(error);
+          } else {
+            resolve(result);
+          }
         }
       );
       uploadStream.end(req.file.buffer);
@@ -74,7 +78,7 @@ router.post('/upload-image', upload.single('image'), async (req, res) => {
     });
   } catch (error) {
     console.error('Error uploading to Cloudinary:', error);
-    res.status(500).json({ message: 'Failed to upload image' });
+    res.status(500).json({ message: 'Failed to upload image', error: error.message });
   }
 });
 

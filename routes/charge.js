@@ -3,7 +3,7 @@ import Charge from '../models/charge.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 import multer from 'multer';
 import path from 'path';
-import cloudinary from 'cloudinary';
+import { v2 as cloudinary } from 'cloudinary';
 
 
 // إعداد التخزين
@@ -88,15 +88,19 @@ router.post('/confirm/:id', upload.single('proofImage'), async (req, res) => {
     if (req.file) {
       // رفع الصورة إلى Cloudinary
       const result = await new Promise((resolve, reject) => {
-        const uploadStream = cloudinary.v2.uploader.upload_stream(
+        const uploadStream = cloudinary.uploader.upload_stream(
           {
             folder: 'gametopupdz/charges',
             public_id: `charge-proof-${Date.now()}-${Math.round(Math.random() * 1E9)}`,
-            resource_type: 'image'
+            resource_type: 'auto'
           },
           (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
+            if (error) {
+              console.error('Cloudinary error:', error);
+              reject(error);
+            } else {
+              resolve(result);
+            }
           }
         );
         uploadStream.end(req.file.buffer);
