@@ -55,6 +55,12 @@ cp .env.example .env
 
 # عدّل MONGODB_URI حسب إعدادك
 # MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/gametopup
+
+# إعداد Cloudinary للصور
+# احصل على المفاتيح من https://cloudinary.com
+# CLOUDINARY_CLOUD_NAME=your-cloud-name
+# CLOUDINARY_API_KEY=your-api-key
+# CLOUDINARY_API_SECRET=your-api-secret
 ```
 
 ### 4. تشغيل الـ Server
@@ -144,6 +150,40 @@ curl -X PUT http://localhost:3000/api/orders/507f191e810c19729de860ea \
   -H "Content-Type: application/json" \
   -d '{"status": "completed"}'
 ```
+
+---
+
+## ☁️ إعداد Cloudinary للصور
+
+تم دمج **Cloudinary** لإدارة الصور بدلاً من التخزين المحلي.
+
+### خطوات الإعداد:
+
+1. **إنشاء حساب Cloudinary**
+   - اذهب إلى [cloudinary.com](https://cloudinary.com)
+   - سجل حساباً مجانياً
+
+2. **الحصول على مفاتيح API**
+   - في لوحة التحكم، اذهب إلى Settings > Account
+   - انسخ `Cloud name`, `API Key`, `API Secret`
+
+3. **تكوين متغيرات البيئة**
+   ```bash
+   CLOUDINARY_CLOUD_NAME=your-cloud-name
+   CLOUDINARY_API_KEY=your-api-key
+   CLOUDINARY_API_SECRET=your-api-secret
+   ```
+
+### المميزات:
+- ✅ تخزين سحابي موثوق
+- ✅ تحسين تلقائي للصور
+- ✅ توزيع سريع عالمياً
+- ✅ نسخ احتياطية تلقائية
+
+### مجلدات Cloudinary:
+- `gametopupdz/games/` - صور الألعاب
+- `gametopupdz/orders/` - إثباتات الدفع للطلبات
+- `gametopupdz/charges/` - إثباتات الدفع للشحن
 
 ---
 

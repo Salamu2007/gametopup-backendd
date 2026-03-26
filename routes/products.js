@@ -5,6 +5,7 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import cloudinary from 'cloudinary';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,20 +16,7 @@ const router = express.Router();
 const getBaseUrl = (req) => process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
 
 // تكوين multer لتحميل الصور
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '../uploads');
-    // التأكد من وجود المجلد
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'game-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({ 
   storage,
@@ -57,16 +45,37 @@ router.get('/', authMiddleware , async (req, res) => {
 });
 
 // تحميل صورة
-router.post('/upload-image', upload.single('image'), (req, res) => {
+router.post('/upload-image', upload.single('image'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'No file uploaded' });
   }
-  
-  res.json({
-    message: 'Image uploaded successfully',
-    imageUrl: `/uploads/${req.file.filename}`,
-    filename: req.file.filename
-  });
+
+  try {
+    // رفع الصورة إلى Cloudinary
+    const result = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.v2.uploader.upload_stream(
+        {
+          folder: 'gametopupdz/games',
+          public_id: `game-${Date.now()}-${Math.round(Math.random() * 1E9)}`,
+          resource_type: 'image'
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      uploadStream.end(req.file.buffer);
+    });
+
+    res.json({
+      message: 'Image uploaded successfully',
+      imageUrl: result.secure_url,
+      publicId: result.public_id
+    });
+  } catch (error) {
+    console.error('Error uploading to Cloudinary:', error);
+    res.status(500).json({ message: 'Failed to upload image' });
+  }
 });
 
 // Get product of charge

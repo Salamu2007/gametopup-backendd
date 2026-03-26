@@ -4,18 +4,11 @@ import Order from '../models/order.js';
 import multer from 'multer';
 import authMiddleware from '../middleware/authMiddleware.js';
 import path from 'path';
+import cloudinary from 'cloudinary';
 
 
 // إعداد التخزين
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // مجلد نحطو فيه الصور
-  },
-  filename: function (req, file, cb) {
-    const uniqueName = Date.now() + '-' + file.originalname;
-    cb(null, uniqueName);
-  }
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({ storage });
 
@@ -78,10 +71,24 @@ router.post('/confirm/:id', upload.single('proofImage'), async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
-    order.proofImageUrl = req.file 
-      ? `${baseUrl}/uploads/${req.file.filename}`
-      : null;
+    if (req.file) {
+      // رفع الصورة إلى Cloudinary
+      const result = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.v2.uploader.upload_stream(
+          {
+            folder: 'gametopupdz/orders',
+            public_id: `order-proof-${Date.now()}-${Math.round(Math.random() * 1E9)}`,
+            resource_type: 'image'
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        uploadStream.end(req.file.buffer);
+      });
+      order.proofImageUrl = result.secure_url;
+    }
 
     order.status = 'waiting_verification';
 

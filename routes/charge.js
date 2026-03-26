@@ -3,18 +3,11 @@ import Charge from '../models/charge.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 import multer from 'multer';
 import path from 'path';
+import cloudinary from 'cloudinary';
 
 
 // إعداد التخزين
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploadsCharge/'); // مجلد نحطو فيه الصور
-  },
-  filename: function (req, file, cb) {
-    const uniqueName = Date.now() + '-' + file.originalname;
-    cb(null, uniqueName);
-  }
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({ storage });
 
@@ -93,8 +86,22 @@ router.post('/confirm/:id', upload.single('proofImage'), async (req, res) => {
     if (!charge) return res.status(404).json({ message: 'Charge not found' });
 
     if (req.file) {
-      const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
-      charge.proofImageUrl = `${baseUrl}/uploadsCharge/${req.file.filename}`;
+      // رفع الصورة إلى Cloudinary
+      const result = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.v2.uploader.upload_stream(
+          {
+            folder: 'gametopupdz/charges',
+            public_id: `charge-proof-${Date.now()}-${Math.round(Math.random() * 1E9)}`,
+            resource_type: 'image'
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        uploadStream.end(req.file.buffer);
+      });
+      charge.proofImageUrl = result.secure_url;
     }
 
     charge.status = 'waiting_verification';
