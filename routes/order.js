@@ -139,7 +139,8 @@ router.get('/paymentorder/:id', async (req, res) => {
       price: order.productId?.price,        // original product price for reference
       quantity: order.quantity,
       paymentMethod: order.paymentMethod,
-      status: order.status
+      status: order.status,
+      email: order.email || null
     });
 
   } catch (error) {

@@ -152,7 +152,8 @@ router.get('/paymentcharge/:id', async (req, res) => {
       quantity: charge.quantity,  // top-up quantity if available
       playerId: charge.playerId,
       paymentMethod: charge.paymentMethod,
-      status: charge.status
+      status: charge.status,
+      email: charge.email || null
     });
 
   } catch (error) {
