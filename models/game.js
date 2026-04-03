@@ -13,6 +13,29 @@ const packageSchema = new mongoose.Schema({
   }
 });
 
+const fieldSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true
+  },
+  label: {
+    type: String,
+    required: true
+  },
+  type: {
+    type: String,
+    enum: ['text', 'email', 'number', 'textarea', 'select', 'checkbox'],
+    required: true
+  },
+  required: {
+    type: Boolean,
+    default: false
+  },
+  options: [{
+    type: String
+  }] // for select fields
+});
+
 const gameSchema = new mongoose.Schema({
   name: {
       type:String,
@@ -72,7 +95,8 @@ const gameSchema = new mongoose.Schema({
     type: String,
     enum: ['game', 'charge'],
     required: true
-  }
+  },
+  fields: [fieldSchema] // Dynamic fields for the form
 }, { 
   timestamps: true 
 });

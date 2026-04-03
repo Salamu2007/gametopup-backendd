@@ -45,6 +45,11 @@ const orderSchema = new mongoose.Schema({
   proofImageUrl: String,
   // keep old field in case some documents used it
   proofIImageUrl:String,
+  // Dynamic form data
+  dynamicData: {
+    type: Map,
+    of: mongoose.Schema.Types.Mixed
+  }
 }, 
 { 
   timestamps: true 
