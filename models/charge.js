@@ -1,10 +1,6 @@
 import mongoose from 'mongoose';
 
 const chargeSchema = new mongoose.Schema({
-  playerId: {
-    type: String,
-    required: true
-  },
   amount: {
     type: Number,
     required: true,

@@ -19,7 +19,6 @@ router.post('/newcharge/:id', async (req, res) => {
     try {
 
         const {
-            playerId,
             amount,
             quantity,
             email,
@@ -30,7 +29,6 @@ router.post('/newcharge/:id', async (req, res) => {
         const gameId = req.params.id; // ✅ الصحيح
 
         const charge = new Charge({
-            playerId,
             amount,
             quantity,
             gameId,
@@ -150,7 +148,6 @@ router.get('/paymentcharge/:id', async (req, res) => {
       image: charge.gameId?.image,
       price: charge.amount,       // amount paid
       quantity: charge.quantity,  // top-up quantity if available
-      playerId: charge.playerId,
       paymentMethod: charge.paymentMethod,
       status: charge.status,
       email: charge.email || null
