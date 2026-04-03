@@ -23,7 +23,8 @@ router.post('/newcharge/:id', async (req, res) => {
             quantity,
             email,
             phone,
-            paymentMethod
+            paymentMethod,
+            dynamicData
         } = req.body;
 
         const gameId = req.params.id; // ✅ الصحيح
@@ -35,6 +36,7 @@ router.post('/newcharge/:id', async (req, res) => {
             email,
             phone,
             paymentMethod,
+            dynamicData,
             status: 'waiting_verification'
         });
 
@@ -150,7 +152,8 @@ router.get('/paymentcharge/:id', async (req, res) => {
       quantity: charge.quantity,  // top-up quantity if available
       paymentMethod: charge.paymentMethod,
       status: charge.status,
-      email: charge.email || null
+      email: charge.email || null,
+      dynamicData: charge.dynamicData ? Object.fromEntries(charge.dynamicData) : {}
     });
 
   } catch (error) {

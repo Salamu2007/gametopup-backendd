@@ -27,6 +27,11 @@ const chargeSchema = new mongoose.Schema({
     type:String,
     required:true
   },
+  dynamicData: {
+    type: Map,
+    of: mongoose.Schema.Types.Mixed,
+    default: {}
+  },
   phone:{
     type:String, 
     required:true   },

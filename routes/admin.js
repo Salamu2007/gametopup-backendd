@@ -141,6 +141,7 @@ router.get('/charges', authMiddleware, async (req, res) => {
         paymentImage: c.proofImageUrl || null,
         email: c.email,
         quantity: c.quantity || 0, // Default to 0 if not set
+        dynamicData: c.dynamicData ? Object.fromEntries(c.dynamicData) : {},
         status: c.status,
         createdAt: c.createdAt
       };
