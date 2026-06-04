@@ -100,22 +100,8 @@ app.use('/api/banners', bannerRoutes);
 
 app.use('/api/admin', adminRoutes);
 
-// خدمة الملفات الثابتة للصور
-app.use('/uploads', express.static('uploads'));
-app.use('/uploadsCharge', express.static('uploadsCharge'));
-
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
-});
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
-});
-
 // Route to generate sitemap.xml dynamically
+
 app.get('/sitemap.xml', async (req, res) => {
   try {
     // 1. نخبروا المتصفح وقوقل باللي هادا ملف XML ماشي صفحة عادية
@@ -167,6 +153,24 @@ app.get('/sitemap.xml', async (req, res) => {
     res.status(500).json({ error: 'Failed to generate sitemap' });
   }
 });
+
+// خدمة الملفات الثابتة للصور
+app.use('/uploads', express.static('uploads'));
+app.use('/uploadsCharge', express.static('uploadsCharge'));
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Something went wrong!' });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ message: 'Route not found' });
+});
+
+// Route to generate sitemap.xml dynamically
+
 
 
 
