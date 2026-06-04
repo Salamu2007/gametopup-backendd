@@ -10,6 +10,9 @@ import adminRoutes from './routes/admin.js';
 import bannerRoutes from './routes/banners.js';
 import dotenv from 'dotenv';
 import { v2 as cloudinary } from 'cloudinary';
+import { SitemapStream, streamToPromise } from 'sitemap';
+import { Readable } from 'stream';
+import Game from './models/game.js';
 
 dotenv.config();
 
@@ -111,6 +114,61 @@ app.use((err, req, res, next) => {
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
+
+// Route to generate sitemap.xml dynamically
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    // 1. نخبروا المتصفح وقوقل باللي هادا ملف XML ماشي صفحة عادية
+    res.header('Content-Type', 'application/xml; charset=utf-8');
+
+    // 2. نجيبوا كامل الألعاب لي راك حاطهم في قاعدة البيانات
+    const games = await Game.find().select('_id name type').lean(); 
+
+    if (!games || games.length === 0) {
+      console.warn('No games found for sitemap');
+    }
+
+    // 3. نحطوا الروابط الثابتة تاع الفونتد (أنجولار)
+    const links = [
+      { url: '/', changefreq: 'daily', priority: 1.0 },
+      { url: '/store-games', changefreq: 'daily', priority: 0.9 },
+      { url: '/charge-games', changefreq: 'daily', priority: 0.9 },
+      { url: '/how-it-works', changefreq: 'monthly', priority: 0.6 },
+      { url: '/about-us', changefreq: 'monthly', priority: 0.6 },
+      { url: '/contact', changefreq: 'monthly', priority: 0.5 }
+    ];
+
+    // 4. نزيدوا روابط الألعاب ديناميكياً (كل لعبة تزيدها في السيت تزيد هنا وحدها)
+    if (games && games.length > 0) {
+      games.forEach(game => {
+        // استخدام type للتمييز بين الألعاب العادية والشحن
+        const path = game.type === 'charge' 
+          ? `/charge-games/${game._id}` 
+          : `/store-games/${game._id}`;
+        
+        links.push({
+          url: path,
+          changefreq: 'weekly',
+          priority: 0.8,
+          lastmod: new Date().toISOString()
+        });
+      });
+    }
+
+    // 5. نصنعوا ملف الـ XML ونبعتوه
+    const hostname = process.env.FRONTEND_URL || 'https://gametopupdz.vercel.app';
+    const stream = new SitemapStream({ hostname });
+    const xmlBuffer = await streamToPromise(Readable.from(links).pipe(stream));
+    
+    res.send(xmlBuffer);
+
+  } catch (error) {
+    console.error('Sitemap generation error:', error.message);
+    res.status(500).json({ error: 'Failed to generate sitemap' });
+  }
+});
+
+
 
 // Removed duplicate mongoose.connect(...) block. connectDB() below handles the connection.
 
