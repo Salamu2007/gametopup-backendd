@@ -102,7 +102,7 @@ app.use('/api/admin', adminRoutes);
 
 // Route to generate sitemap.xml dynamically
 
-app.get('/sitemap-v2.xml', async (req, res) => {
+app.get('/sitemap.xml', async (req, res) => {
   try {
     // 1. نخبروا المتصفح وقوقل باللي هادا ملف XML ماشي صفحة عادية
     res.header('Content-Type', 'application/xml; charset=utf-8');
@@ -142,7 +142,7 @@ app.get('/sitemap-v2.xml', async (req, res) => {
     }
 
     // 5. نصنعوا ملف الـ XML ونبعتوه
-    const hostname = process.env.FRONTEND_URL || 'https://gamestopupdz.vercel.app';
+    const hostname = process.env.CORS_ORIGIN || 'https://gamestopupdz.vercel.app';
     const stream = new SitemapStream({ hostname });
     const xmlBuffer = await streamToPromise(Readable.from(links).pipe(stream));
     
