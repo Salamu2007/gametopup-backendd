@@ -117,11 +117,11 @@ app.get('/sitemap.xml', async (req, res) => {
     // 3. نحطوا الروابط الثابتة تاع الفونتد (أنجولار)
     const links = [
       { url: '/', changefreq: 'daily', priority: 1.0 },
-      { url: '/store-games', changefreq: 'daily', priority: 0.9 },
-      { url: '/charge-games', changefreq: 'daily', priority: 0.9 },
-      { url: '/how-it-works', changefreq: 'monthly', priority: 0.6 },
-      { url: '/about-us', changefreq: 'monthly', priority: 0.6 },
-      { url: '/contact', changefreq: 'monthly', priority: 0.5 }
+      { url: 'user/games', changefreq: 'daily', priority: 0.9 },
+      { url: 'user/charge-games', changefreq: 'daily', priority: 0.9 },
+      { url: 'user/how-it-works', changefreq: 'monthly', priority: 0.6 },
+      { url: 'user/about-us', changefreq: 'monthly', priority: 0.6 },
+      { url: 'user/contact', changefreq: 'monthly', priority: 0.5 }
     ];
 
     // 4. نزيدوا روابط الألعاب ديناميكياً (كل لعبة تزيدها في السيت تزيد هنا وحدها)
@@ -129,8 +129,8 @@ app.get('/sitemap.xml', async (req, res) => {
       games.forEach(game => {
         // استخدام type للتمييز بين الألعاب العادية والشحن
         const path = game.type === 'charge' 
-          ? `/charge-games/${game._id}` 
-          : `/store-games/${game._id}`;
+          ? `user/charge-games/${game._id}` 
+          : `user/games/${game._id}`;
         
         links.push({
           url: path,
@@ -142,7 +142,7 @@ app.get('/sitemap.xml', async (req, res) => {
     }
 
     // 5. نصنعوا ملف الـ XML ونبعتوه
-    const hostname = process.env.FRONTEND_URL || 'https://gametopupdz.vercel.app';
+    const hostname = process.env.FRONTEND_URL || 'https://gamestopupdz.vercel.app';
     const stream = new SitemapStream({ hostname });
     const xmlBuffer = await streamToPromise(Readable.from(links).pipe(stream));
     
