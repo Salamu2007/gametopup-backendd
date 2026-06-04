@@ -102,7 +102,7 @@ app.use('/api/admin', adminRoutes);
 
 // Route to generate sitemap.xml dynamically
 
-app.get('/sitemap.xml', async (req, res) => {
+app.get('/sitemap-v2.xml', async (req, res) => {
   try {
     // 1. نخبروا المتصفح وقوقل باللي هادا ملف XML ماشي صفحة عادية
     res.header('Content-Type', 'application/xml; charset=utf-8');
