@@ -101,7 +101,7 @@ app.use('/api/banners', bannerRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Route to generate sitemap.xml dynamically
-
+/*
 app.get('/sitemap-v2.xml', async (req, res) => {
   try {
     // 1. نخبروا المتصفح وقوقل باللي هادا ملف XML ماشي صفحة عادية
@@ -152,6 +152,54 @@ app.get('/sitemap-v2.xml', async (req, res) => {
     console.error('Sitemap generation error:', error.message);
     res.status(500).json({ error: 'Failed to generate sitemap' });
   }
+});
+
+*/
+
+// 🔍 SEO Routes - Sitemap and Robots
+app.get('/sitemap.xml', (req, res) => {
+    res.type('application/xml');
+    res.header('Cache-Control', 'public, max-age=86400');
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>
+    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+      <url>
+        <loc>https://gamestopupdz.vercel.app/</loc>
+        <changefreq>daily</changefreq>
+        <priority>1.0</priority>
+      </url>
+      <url>
+        <loc>https://gamestopupdz.vercel.app/user/games</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.9</priority>
+      </url>
+      <url>
+        <loc>https://gamestopupdz.vercel.app/user/charge-games</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.9</priority>
+      </url>
+      <url>
+        <loc>https://gamestopupdz.vercel.app/user/how-it-works</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+      </url>
+      <url>
+        <loc>https://gamestopupdz.vercel.app/user/about-us</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+      </url>
+      <url>
+        <loc>https://gamestopupdz.vercel.app/user/contact</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.5</priority>
+      </url>
+    </urlset>`);
+});
+
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain');
+  res.send(`User-agent: *
+Allow: /
+Sitemap: https://gamestopupdz.vercel.app/sitemap.xml`);
 });
 
 // خدمة الملفات الثابتة للصور
