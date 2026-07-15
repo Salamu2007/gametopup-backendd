@@ -142,7 +142,7 @@ app.get('/sitemap.xml', async (req, res) => {
     }
 
     // 5. نصنعوا ملف الـ XML ونبعتوه
-    const hostname = process.env.CORS_ORIGIN || 'https://gamestopupdz.vercel.app';
+    const hostname = process.env.CORS_ORIGIN || 'https://gamestopupdz.shop';
     const stream = new SitemapStream({ hostname });
     const xmlBuffer = await streamToPromise(Readable.from(links).pipe(stream));
     
@@ -158,7 +158,7 @@ app.get('/robots.txt', (req, res) => {
   res.type('text/plain');
   res.send(`User-agent: *
   Allow: /
-  Sitemap: https://gamestopupdz.vercel.app/sitemap.xml`);
+  Sitemap: https://gamestopupdz.shop/sitemap.xml`);
 });
 
 // خدمة الملفات الثابتة للصور
