@@ -158,7 +158,7 @@ app.get('/robots.txt', (req, res) => {
   res.type('text/plain');
   res.send(`User-agent: *
   Allow: /
-  Sitemap: https://gamestopupdz.shop/sitemap.xml`);
+  Sitemap: https://gametopupdz.shop/sitemap.xml`);
 });
 
 // خدمة الملفات الثابتة للصور
