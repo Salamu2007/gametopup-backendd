@@ -18,7 +18,7 @@ const router = express.Router();
 // Create a new order
 router.post('/neworder/:id', async (req, res) => {
   try {
-    const { quantity, email, phone, paymentMethod, dynamicData } = req.body;
+    const { quantity, email, phone, paymentMethod, dynamicData, username } = req.body;
     const productId = req.params.id;
     // 1️⃣ نجيب بيانات اللعبة من قاعدة البيانات
     const game = await Game.findById(productId);
@@ -36,6 +36,7 @@ router.post('/neworder/:id', async (req, res) => {
       quantity,
       unitPrice,
       totalPrice,
+      username: username || email?.split('@')[0] || 'مستخدم',
       email,
       phone,
       paymentMethod,
@@ -135,12 +136,13 @@ router.get('/paymentorder/:id', async (req, res) => {
       orderId: order._id,
       name: order.productId?.name,
       image: order.productId?.image,
-      unitPrice: order.unitPrice,           // send stored unit price
-      totalPrice: order.totalPrice,         // also send total
-      price: order.productId?.price,        // original product price for reference
+      unitPrice: order.unitPrice,
+      totalPrice: order.totalPrice,
+      price: order.productId?.price,
       quantity: order.quantity,
       paymentMethod: order.paymentMethod,
       status: order.status,
+      username: order.username || order.email?.split('@')[0] || 'مستخدم',
       email: order.email || null
     });
 

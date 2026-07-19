@@ -108,6 +108,7 @@ router.get('/orders', authMiddleware, async (req, res) => {
         : '/assets/images/default.png',
       currency: o.productId?.currency || 'دج',
       paymentImage: o.proofImageUrl || o.proofIImageUrl || null,
+      username: o.username || o.email?.split('@')[0] || 'مستخدم',
       email: o.email,
       quantity: o.quantity,
       status: o.status,

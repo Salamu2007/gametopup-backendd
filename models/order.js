@@ -33,6 +33,11 @@ const orderSchema = new mongoose.Schema({
     default: "pending",
     index: true
   },
+  username: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   email:{
     type:String,
     required:true
