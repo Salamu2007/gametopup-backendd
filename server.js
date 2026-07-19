@@ -8,6 +8,7 @@ import orderRoutes from './routes/order.js';
 import chargeRouter from './routes/charge.js';
 import adminRoutes from './routes/admin.js';
 import bannerRoutes from './routes/banners.js';
+import authRoutes from './routes/auth.js';
 import dotenv from 'dotenv';
 import { v2 as cloudinary } from 'cloudinary';
 import { SitemapStream, streamToPromise } from 'sitemap';
@@ -97,6 +98,7 @@ app.use('/api/orders', orderRoutes);
 
 app.use('/api/charges', chargeRouter);
 app.use('/api/banners', bannerRoutes);
+app.use('/api/auth', authRoutes);
 
 app.use('/api/admin', adminRoutes);
 
