@@ -65,6 +65,47 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
+router.get('/my-orders', authMiddleware, async (req, res) => {
+  try {
+    const userEmail = req.user?.email;
+    const userName = req.user?.username;
+
+    if (!userEmail && !userName) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    const orders = await Order.find({
+      $or: [
+        { email: userEmail },
+        { username: userName }
+      ]
+    })
+      .populate('productId', 'name image price currency')
+      .sort({ createdAt: -1 });
+
+    const mappedOrders = orders.map((order) => ({
+      _id: order._id,
+      gameName: order.productId?.name || 'غير معروف',
+      gameImage: order.productId?.image
+        ? (order.productId.image.startsWith('/uploads/')
+            ? `${process.env.BASE_URL || 'http://localhost:3000'}${order.productId.image}`
+            : order.productId.image)
+        : '/assets/images/default.png',
+      quantity: order.quantity,
+      totalPrice: order.totalPrice,
+      paymentMethod: order.paymentMethod,
+      username: order.username || order.email?.split('@')[0] || 'مستخدم',
+      email: order.email,
+      status: order.status,
+      createdAt: order.createdAt
+    }));
+
+    return res.json(mappedOrders);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+
 router.post('/confirm/:id', upload.single('proofImage'), async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
