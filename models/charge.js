@@ -27,6 +27,11 @@ const chargeSchema = new mongoose.Schema({
     type:String,
     required:true
   },
+  username: {
+    type: String,
+    required: false,
+    default: ''
+  },
   dynamicData: {
     type: Map,
     of: mongoose.Schema.Types.Mixed,

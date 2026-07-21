@@ -24,7 +24,8 @@ router.post('/newcharge/:id', async (req, res) => {
             email,
             phone,
             paymentMethod,
-            dynamicData
+            dynamicData,
+            username
         } = req.body;
 
         const gameId = req.params.id; // ✅ الصحيح
@@ -34,6 +35,7 @@ router.post('/newcharge/:id', async (req, res) => {
             quantity,
             gameId,
             email,
+            username: username || email?.split('@')[0] || 'مستخدم',
             phone,
             paymentMethod,
             dynamicData,
@@ -152,6 +154,7 @@ router.get('/paymentcharge/:id', async (req, res) => {
       quantity: charge.quantity,  // top-up quantity if available
       paymentMethod: charge.paymentMethod,
       status: charge.status,
+      username: charge.username || charge.email?.split('@')[0] || 'مستخدم',
       email: charge.email || null,
       dynamicData: charge.dynamicData ? Object.fromEntries(charge.dynamicData) : {}
     });
