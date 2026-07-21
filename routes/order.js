@@ -97,12 +97,57 @@ router.get('/my-orders', authMiddleware, async (req, res) => {
       username: order.username || order.email?.split('@')[0] || 'مستخدم',
       email: order.email,
       status: order.status,
+      deliveredData: order.deliveredData || null,
       createdAt: order.createdAt
     }));
 
     return res.json(mappedOrders);
   } catch (error) {
     return res.status(500).json({ message: error.message });
+  }
+});
+
+router.put('/approve/:id', authMiddleware, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    if (order.status === 'completed' || order.status === 'paid') {
+      return res.status(400).json({ message: 'Order already completed' });
+    }
+
+    const game = await Game.findById(order.productId);
+    if (!game) {
+      return res.status(404).json({ message: 'Linked game not found' });
+    }
+
+    const quantityNeeded = Number(order.quantity || 1);
+    const hasEnoughInventory = (game.accounts?.length || 0) >= quantityNeeded && (Number(game.stock) || 0) >= quantityNeeded;
+
+    if (!hasEnoughInventory) {
+      return res.status(400).json({ message: 'No enough stock/accounts available for this order' });
+    }
+
+    const deliveredAccounts = (game.accounts || []).slice(0, quantityNeeded);
+    game.accounts = (game.accounts || []).slice(quantityNeeded);
+    game.stock = Math.max(0, (Number(game.stock) || 0) - quantityNeeded);
+    await game.save();
+
+    order.status = 'completed';
+    order.deliveredData = {
+      account: deliveredAccounts.length === 1 ? deliveredAccounts[0] : deliveredAccounts,
+      quantity: quantityNeeded,
+      deliveredAt: new Date()
+    };
+
+    await order.save();
+
+    res.json({ message: 'Order approved and delivered successfully', order });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 });
 
@@ -183,6 +228,7 @@ router.get('/paymentorder/:id', async (req, res) => {
       quantity: order.quantity,
       paymentMethod: order.paymentMethod,
       status: order.status,
+      deliveredData: order.deliveredData || null,
       username: order.username || order.email?.split('@')[0] || 'مستخدم',
       email: order.email || null
     });

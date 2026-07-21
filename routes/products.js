@@ -134,8 +134,21 @@ router.get('/orders', async (req, res) => {
 
 // Create a new product
 router.post('/create', authMiddleware, async (req, res) => {
-    const newGame = new Game(req.body);
     try {
+        const payload = { ...req.body };
+
+        if (typeof payload.accounts === 'string') {
+            payload.accounts = payload.accounts
+                .split(/\r?\n/)
+                .map((item) => item.trim())
+                .filter(Boolean);
+        }
+
+        if (payload.stock !== undefined && payload.stock !== null) {
+            payload.stock = Number(payload.stock);
+        }
+
+        const newGame = new Game(payload);
         const savedGame = await newGame.save();
         res.status(201).json(savedGame);
     } catch (error) {
@@ -147,13 +160,25 @@ router.post('/create', authMiddleware, async (req, res) => {
 // Update a product
 router.put('/:id', authMiddleware, async (req, res) => {
     try {
-        const updatedGame = await Game.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const payload = { ...req.body };
+
+        if (typeof payload.accounts === 'string') {
+            payload.accounts = payload.accounts
+                .split(/\r?\n/)
+                .map((item) => item.trim())
+                .filter(Boolean);
+        }
+
+        if (payload.stock !== undefined && payload.stock !== null) {
+            payload.stock = Number(payload.stock);
+        }
+
+        const updatedGame = await Game.findByIdAndUpdate(req.params.id, payload, { new: true });
         if (!updatedGame) {
             return res.status(404).json({ message: 'Product not found' });
-        }else{
-            res.json(updatedGame);
-            res.status(200).json({ message: 'Product updated successfully' });
         }
+
+        res.status(200).json({ message: 'Product updated successfully', game: updatedGame });
     } catch (error) {
         console.error('Error updating product:', error);
         res.status(400).json({ message: error.message });

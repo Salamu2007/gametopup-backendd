@@ -186,7 +186,7 @@ app.use((req, res) => {
 // Removed duplicate mongoose.connect(...) block. connectDB() below handles the connection.
 
 const connectDB = async () => {
-  const mongoUri = process.env.MONGODB_URI;
+  const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
   if (!mongoUri) {
     console.error('MongoDB URI is not set (process.env.MONGODB_URI). Please configure it in your Render/hosting environment.');
     process.exit(1);

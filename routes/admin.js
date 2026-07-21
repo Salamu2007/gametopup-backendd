@@ -8,6 +8,7 @@ import authMiddleware from '../middleware/authMiddleware.js';
 import Order from '../models/order.js';
 import Charge from '../models/charge.js';
 import Game from '../models/game.js';
+import { sendEmailService } from '../services/emailService.js';
 dotenv.config();
 
 
@@ -112,6 +113,7 @@ router.get('/orders', authMiddleware, async (req, res) => {
       email: o.email,
       quantity: o.quantity,
       status: o.status,
+      deliveredData: o.deliveredData || null,
       createdAt: o.createdAt
     }));
 
@@ -172,50 +174,41 @@ router.put('/confirm/:id', authMiddleware, async (req, res) => {
       reason: ''
     };
 
-    // email notification
     if (!order.email) {
       emailNotification.reason = 'No email address set on order.';
       console.warn('🔔 No email address set on order, skipping email notification.');
     } else {
       emailNotification.attempted = true;
       try {
-        const gmailUser = process.env.GMAIL_USER?.trim();
-        const gmailPass = process.env.GMAIL_PASS?.trim();
-        if (!gmailUser || !gmailPass) {
-          emailNotification.reason = 'Missing GMAIL_USER or GMAIL_PASS in environment.';
-          console.warn('⚠️ Gmail credentials are not set. Please set GMAIL_USER and GMAIL_PASS in your environment.');
-        }
-
-        if (gmailUser && gmailPass) {
-          console.log('📩 Sending order confirmation email to', order.email);
-          const nodemailer = await import('nodemailer');
-          const transporter = nodemailer.createTransport({ service:'gmail', auth:{user:gmailUser,pass:gmailPass}});
-          await transporter.sendMail({
-            from: gmailUser,
-            to: order.email,
-            subject: '✅ طلب الشراء مقبول',
-            html: `
-            <div style="direction: rtl; font-family: Arial, sans-serif; color: #333;">
-              <h2>🎉 تم قبول طلب الشراء!</h2>
-              <p>تهانينا، لقد تم قبول طلب شراء اللعبة بنجاح.</p>
-              <div style="background: #f0f0f0; padding: 15px; border-radius: 5px; margin: 15px 0;">
-                <p><strong>تفاصيل الطلب:</strong></p>
-                <p>🎮 <strong>اللعبة:</strong> ${order.productId?.name || 'Unknown'}</p>
-                <p>👤 <strong>بريدك الالكتروني :</strong> ${order.email}</p>
-                <p>💰 <strong>المبلغ:</strong> ${order.totalPrice} دج</p>
-                <p>📦 <strong>الكمية:</strong> ${order.quantity || 0}</p>
-                <p>🆔 <strong>رقم الطلب:</strong> ${order._id}</p>
+        const accountPayload = order.deliveredData?.account || 'سيتم تزويدك بالبيانات قريباً';
+        await sendEmailService({
+          to: order.email,
+          subject: '✅ تم قبول طلبك في GameTopUpDZ',
+          html: `
+            <div style="font-family: Arial, sans-serif; direction: rtl; background: #0f172a; color: #f8fafc; padding: 24px; border-radius: 16px;">
+              <div style="max-width: 640px; margin: 0 auto; background: #111827; border: 1px solid #334155; border-radius: 16px; overflow: hidden;">
+                <div style="background: linear-gradient(135deg, #38bdf8, #2563eb); padding: 20px; text-align: center;">
+                  <h2 style="margin: 0; color: #fff;">🎉 تم قبول طلبك بنجاح</h2>
+                </div>
+                <div style="padding: 24px;">
+                  <p>مرحباً، تم قبول طلبك في GameTopUpDZ بنجاح.</p>
+                  <p><strong>اللعبة:</strong> ${order.productId?.name || 'غير معروف'}</p>
+                  <p><strong>رقم الطلب:</strong> ${order._id}</p>
+                  <p><strong>المبلغ:</strong> ${order.totalPrice} دج</p>
+                  <div style="background: #1e293b; padding: 16px; border-radius: 12px; margin: 16px 0;">
+                    <p style="margin: 0 0 8px;"><strong>البيانات المسلمة:</strong></p>
+                    <pre style="margin: 0; white-space: pre-wrap; word-break: break-word; color: #f8fafc; font-family: Consolas, monospace;">${String(accountPayload).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+                  </div>
+                  <p>شكراً لاختيارك GameTopUpDZ. إذا كان لديك أي سؤال، نحن هنا للمساعدة.</p>
+                </div>
               </div>
-              <p>سيتم إعلامك عبر البريد الإلكتروني بمجرد اكتمال العملية.</p>
-              <hr style="border: none; border-top: 1px solid #ddd; margin: 15px 0;">
-              <p style="font-size: 12px; color: #999;">شكراً لثقتك بنا.</p>
             </div>
-          `
-          });
-          emailNotification.success = true;
-          emailNotification.reason = 'Email sent successfully';
-          console.log('✅ Order confirmation email sent successfully to', order.email);
-        }
+          `,
+          text: `تم قبول طلبك في GameTopUpDZ. البيانات المسلمة: ${accountPayload}`
+        });
+        emailNotification.success = true;
+        emailNotification.reason = 'Email sent successfully';
+        console.log('✅ Order confirmation email sent successfully to', order.email);
       } catch (e) {
         emailNotification.reason = e.message || 'Unknown error sending email';
         console.error('email notify order confirm fail', e);

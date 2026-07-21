@@ -29,7 +29,7 @@ const orderSchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: ["pending", "waiting_verification", "paid", "rejected"],
+    enum: ["pending", "waiting_verification", "paid", "rejected", "completed"],
     default: "pending",
     index: true
   },
@@ -54,6 +54,10 @@ const orderSchema = new mongoose.Schema({
   dynamicData: {
     type: Map,
     of: mongoose.Schema.Types.Mixed
+  },
+  deliveredData: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
   }
 }, 
 { 

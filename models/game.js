@@ -70,6 +70,10 @@ const gameSchema = new mongoose.Schema({
     default: 0,
     min: 0
   },
+  accounts: {
+    type: [String],
+    default: []
+  },
   description: String,
   genre: String,
   rating: {
